@@ -1,4 +1,4 @@
-# SDBTT: Simple Database Transfer Tool
+# echoDB: Simple Database Transfer Tool
 
 A retrowave-themed interface for MySQL database management, import, and transfer operations.
 
@@ -19,9 +19,9 @@ A retrowave-themed interface for MySQL database management, import, and transfer
 Clone the repository and run the tool directly:
 
 ```bash
-git clone https://github.com/eraxe/sdbtt.git
-cd sdbtt
-./bin/sdbtt
+git clone https://github.com/eraxe/echoDB.git
+cd echoDB
+./bin/echodb
 ```
 
 ### System Installation
@@ -32,31 +32,31 @@ Install the tool system-wide:
 sudo ./install.sh
 ```
 
-Once installed, you can run the tool by typing `sdbtt` in your terminal.
+Once installed, you can run the tool by typing `echoDB` in your terminal.
 
 ## Usage
 
-SDBTT provides both an interactive UI mode and a command-line interface:
+echoDB provides both an interactive UI mode and a command-line interface:
 
 ### Interactive Mode
 
 Simply run the command without arguments:
 
 ```bash
-sdbtt
+echoDB
 ```
 
 ### Command Line Mode
 
 ```bash
 # Import SQL files with prefix
-sdbtt --user=root --prefix=mydb_ import
+echoDB --user=root --prefix=mydb_ import
 
 # Backup databases
-sdbtt --user=admin backup
+echoDB --user=admin backup
 
 # List databases
-sdbtt --user=root list
+echoDB --user=root list
 ```
 
 ## Requirements
@@ -68,7 +68,7 @@ sdbtt --user=root list
 
 ## Configuration
 
-SDBTT configuration is stored in `~/.sdbtt/config.conf` and can be modified directly or through the interactive interface.
+echoDB configuration is stored in `~/.echoDB/config.conf` and can be modified directly or through the interactive interface.
 
 ## License
 

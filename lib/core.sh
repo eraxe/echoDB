@@ -1,18 +1,18 @@
 #!/bin/bash
-# SDBTT Core Module
+# echoDB Core Module
 # Contains core functionality and initialization
 
 # Version information
 VERSION="1.3.0"
-REPO_URL="https://github.com/eraxe/sdbtt"
+REPO_URL="https://github.com/eraxe/echoDB"
 
 # Default configuration
-CONFIG_DIR="$HOME/.sdbtt"
+CONFIG_DIR="$HOME/.echoDB"
 CONFIG_FILE="$CONFIG_DIR/config.conf"
-TEMP_DIR="/tmp/sdbtt_$(date +%Y%m%d_%H%M%S)"
+TEMP_DIR="/tmp/echoDB_$(date +%Y%m%d_%H%M%S)"
 LOG_DIR="$CONFIG_DIR/logs"
-LOG_FILE="$LOG_DIR/sdbtt_$(date +%Y%m%d_%H%M%S).log"
-DISPLAY_LOG_FILE="/tmp/sdbtt_display_log_$(date +%Y%m%d_%H%M%S)"
+LOG_FILE="$LOG_DIR/echoDB_$(date +%Y%m%d_%H%M%S).log"
+DISPLAY_LOG_FILE="/tmp/echoDB_display_log_$(date +%Y%m%d_%H%M%S)"
 PASS_STORE="$CONFIG_DIR/.passstore"
 
 # Default behavior - can be changed by command line arguments
@@ -78,13 +78,13 @@ process_arguments() {
             --help)
                 show_header
                 cat << EOF
-SDBTT: Simple Database Transfer Tool
+echoDB: Simple Database Transfer Tool
 Usage: $(basename "$0") [OPTION]
 
 Options:
-  --install       Install SDBTT to system
-  --update        Update SDBTT from GitHub
-  --remove        Remove SDBTT from system
+  --install       Install echoDB to system
+  --update        Update echoDB from GitHub
+  --remove        Remove echoDB from system
   --help          Show this help message
   --debug         Enable debug logging
   --no-dialog     Disable dialog UI (use console mode)
@@ -113,8 +113,8 @@ EOF
 # Install the script to the system
 install_script() {
     local install_dir="/usr/local/bin"
-    local conf_dir="/etc/sdbtt"
-    local script_name="sdbtt"
+    local conf_dir="/etc/echoDB"
+    local script_name="echoDB"
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)
 
     # Check if running with sudo/root
@@ -127,30 +127,30 @@ install_script() {
     mkdir -p "$install_dir" "$conf_dir"
 
     # Install the entire directory structure
-    cp -r "$script_dir"/* /usr/local/share/sdbtt/
+    cp -r "$script_dir"/* /usr/local/share/echoDB/
 
     # Create symlink to executable
-    ln -sf /usr/local/share/sdbtt/bin/sdbtt "$install_dir/$script_name"
-    chmod 755 "/usr/local/share/sdbtt/bin/sdbtt"
+    ln -sf /usr/local/share/echoDB/bin/echodb "$install_dir/$script_name"
+    chmod 755 "/usr/local/share/echoDB/bin/echodb"
 
     # Create global config
     if [ ! -f "$conf_dir/config.conf" ]; then
         cat > "$conf_dir/config.conf" << EOF
-# SDBTT Global Configuration
+# echoDB Global Configuration
 VERSION="$VERSION"
 EOF
     fi
 
-    dialog --colors --title "Installation Complete" --msgbox "\Z6SDBTT has been installed to $install_dir/$script_name\n\nYou can now run it by typing 'sdbtt' in your terminal." 10 70
+    dialog --colors --title "Installation Complete" --msgbox "\Z6echoDB has been installed to $install_dir/$script_name\n\nYou can now run it by typing 'echoDB' in your terminal." 10 70
     return 0
 }
 
 # Remove script from system
 remove_script() {
     local install_dir="/usr/local/bin"
-    local share_dir="/usr/local/share/sdbtt"
-    local conf_dir="/etc/sdbtt"
-    local script_name="sdbtt"
+    local share_dir="/usr/local/share/echoDB"
+    local conf_dir="/etc/echoDB"
+    local script_name="echoDB"
 
     # Check if running with sudo/root
     if [ "$(id -u)" -ne 0 ]; then
@@ -159,7 +159,7 @@ remove_script() {
     fi
 
     # Confirm removal
-    dialog --colors --title "Confirm Removal" --yesno "\Z1Are you sure you want to remove SDBTT from your system?\Z0" 8 60
+    dialog --colors --title "Confirm Removal" --yesno "\Z1Are you sure you want to remove echoDB from your system?\Z0" 8 60
     if [ $? -ne 0 ]; then
         return 1
     fi
@@ -174,13 +174,13 @@ remove_script() {
         rm -rf "$conf_dir"
     fi
 
-    dialog --colors --title "Removal Complete" --msgbox "\Z6SDBTT has been removed from your system." 8 60
+    dialog --colors --title "Removal Complete" --msgbox "\Z6echoDB has been removed from your system." 8 60
     return 0
 }
 
 # Enhanced update function with better UI feedback
 update_script() {
-    local temp_dir="/tmp/sdbtt_update_$(date +%s)"
+    local temp_dir="/tmp/echoDB_update_$(date +%s)"
     local current_dir=$(pwd)
     local update_log="$temp_dir/update.log"
     local script_dir=$(cd "$(dirname "${BASH_SOURCE[0]}")" && cd .. && pwd)
@@ -239,7 +239,7 @@ update_script() {
         kill $dialog_pid 2>/dev/null
 
         # Confirm update - simplified message
-        dialog --colors --title "Update Confirmation" --yesno "\Z6Do you want to update SDBTT to the latest version?\n\nThis will replace your current version with the latest from GitHub." 10 60
+        dialog --colors --title "Update Confirmation" --yesno "\Z6Do you want to update echoDB to the latest version?\n\nThis will replace your current version with the latest from GitHub." 10 60
 
         if [ $? -eq 0 ]; then
             # User confirmed update
@@ -249,7 +249,7 @@ update_script() {
             # Check if it's a system installation or local
             local is_system_install=0
 
-            if [ -f "/usr/local/bin/sdbtt" ] || [ -d "/usr/local/share/sdbtt" ]; then
+            if [ -f "/usr/local/bin/echodb" ] || [ -d "/usr/local/share/echoDB" ]; then
                 echo "[$(date)] Detected system installation." >> "$update_log"
                 is_system_install=1
 
@@ -265,8 +265,8 @@ update_script() {
             # If system install
             if [ $is_system_install -eq 1 ]; then
                 echo "[$(date)] Updating system installation..." >> "$update_log"
-                # Copy all files to /usr/local/share/sdbtt
-                cp -r ./* /usr/local/share/sdbtt/ >> "$update_log" 2>&1
+                # Copy all files to /usr/local/share/echoDB
+                cp -r ./* /usr/local/share/echoDB/ >> "$update_log" 2>&1
                 echo "[$(date)] System installation updated successfully." >> "$update_log"
             else
                 echo "[$(date)] Updating local installation..." >> "$update_log"
@@ -275,7 +275,7 @@ update_script() {
                 echo "[$(date)] Local installation updated successfully." >> "$update_log"
             fi
 
-            dialog --colors --title "Update Successful" --msgbox "\Z6SDBTT has been updated to the latest version.\n\nPlease restart the script for changes to take effect." 10 60
+            dialog --colors --title "Update Successful" --msgbox "\Z6echoDB has been updated to the latest version.\n\nPlease restart the script for changes to take effect." 10 60
 
             # Cleanup and exit
             rm -rf "$temp_dir"
@@ -302,7 +302,7 @@ update_script() {
 
 # Simplified check for updates function
 check_for_updates() {
-    dialog --colors --title "Check for Updates" --yesno "\Z6Would you like to check for and download the latest version of SDBTT from GitHub?\n\nThis will replace your current version with the latest available." 10 70
+    dialog --colors --title "Check for Updates" --yesno "\Z6Would you like to check for and download the latest version of echoDB from GitHub?\n\nThis will replace your current version with the latest available." 10 70
 
     if [ $? -eq 0 ]; then
         update_script
@@ -316,7 +316,7 @@ check_for_updates() {
 main() {
     # Set DEBUG temporarily to diagnose issues if needed
     DEBUG=${DEBUG:-0}
-    debug_log "Starting SDBTT v$VERSION"
+    debug_log "Starting echoDB v$VERSION"
 
     # Process command line arguments if any
     if [ $# -gt 0 ]; then
@@ -383,7 +383,7 @@ main() {
         show_main_menu
     else
         echo "Console mode not implemented in this version." >&2
-        echo "Please install dialog or fix terminal settings to use SDBTT." >&2
+        echo "Please install dialog or fix terminal settings to use echoDB." >&2
         exit 1
     fi
 
@@ -392,5 +392,5 @@ main() {
         rm -f "$DIALOGRC"
     fi
 
-    debug_log "SDBTT exiting normally"
+    debug_log "echoDB exiting normally"
 }

@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT Installation Script
+# echoDB Installation Script
 # Installs the Simple Database Transfer Tool system-wide
 
 # Define colors for output
@@ -18,14 +18,14 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 
 # Set installation paths
-INSTALL_DIR="/usr/local/share/sdbtt"
-BIN_LINK="/usr/local/bin/sdbtt"
-CONF_DIR="/etc/sdbtt"
+INSTALL_DIR="/usr/local/share/echoDB"
+BIN_LINK="/usr/local/bin/echodb"
+CONF_DIR="/etc/echoDB"
 
 # Get script directory
 SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 
-echo -e "${MAGENTA}Installing SDBTT - Simple Database Transfer Tool${RESET}"
+echo -e "${MAGENTA}Installing echoDB - Simple Database Transfer Tool${RESET}"
 
 # Create installation directories
 echo -e "${CYAN}Creating installation directories...${RESET}"
@@ -38,12 +38,12 @@ cp -r "$SCRIPT_DIR"/* "$INSTALL_DIR/"
 
 # Set permissions
 echo -e "${CYAN}Setting file permissions...${RESET}"
-chmod 755 "$INSTALL_DIR/bin/sdbtt"
+chmod 755 "$INSTALL_DIR/bin/echodb"
 chmod 755 "$INSTALL_DIR/install.sh"
 
 # Create symlink
 echo -e "${CYAN}Creating executable symlink...${RESET}"
-ln -sf "$INSTALL_DIR/bin/sdbtt" "$BIN_LINK"
+ln -sf "$INSTALL_DIR/bin/echodb" "$BIN_LINK"
 
 # Create global configuration
 if [ ! -f "$CONF_DIR/config.conf" ]; then
@@ -52,4 +52,4 @@ if [ ! -f "$CONF_DIR/config.conf" ]; then
 fi
 
 echo -e "${GREEN}Installation complete!${RESET}"
-echo -e "${YELLOW}You can now run SDBTT by typing ${CYAN}sdbtt${YELLOW} in your terminal.${RESET}"
+echo -e "${YELLOW}You can now run echoDB by typing ${CYAN}echoDB${YELLOW} in your terminal.${RESET}"

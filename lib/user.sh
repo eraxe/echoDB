@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT User Management Module
+# echoDB User Management Module
 # Handles MySQL user creation, privileges, and management
 
 # List all MySQL users with enhanced formatting
@@ -387,7 +387,7 @@ manage_database_permissions() {
 
     # Permissions management menu
     local choice
-    choice=$(dialog --colors --clear --backtitle "\Z6SDBTT Permission Management\Z0" \
+    choice=$(dialog --colors --clear --backtitle "\Z6echoDB Permission Management\Z0" \
         --title "Permissions for $selected_db" --menu "Choose an option:" 15 60 5 \
         "1" "\Z6Grant permissions to a user\Z0" \
         "2" "\Z6Revoke permissions from a user\Z0" \
@@ -877,7 +877,7 @@ database_user_assignment() {
     fi
 
     # Create a temporary log file for grant progress
-    local grant_log="/tmp/sdbtt_grant_$.log"
+    local grant_log="/tmp/echoDB_grant_$.log"
     echo "Starting grant of privileges for user '$selected_user'" > "$grant_log"
 
     # Display progress dialog

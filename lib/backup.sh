@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT Backup Module
+# echoDB Backup Module
 # Handles database backup and restore operations
 
 # Securely store database backup and restore function
@@ -83,7 +83,7 @@ backup_database_with_progress() {
 
     # Ask for backup options
     local choice
-    choice=$(dialog --colors --clear --backtitle "\Z6SDBTT MySQL Backup\Z0" \
+    choice=$(dialog --colors --clear --backtitle "\Z6echoDB MySQL Backup\Z0" \
         --title "Backup Options" --menu "Choose backup format:" 15 60 4 \
         "1" "\Z6Compressed SQL backup (gzip)\Z0" \
         "2" "\Z6Plain SQL backup\Z0" \
@@ -119,7 +119,7 @@ backup_database_with_progress() {
     local backup_file="$backup_dir/${db_name}_backup_${timestamp}${backup_ext}"
 
     # Create a temporary log file for backup progress
-    local backup_log="/tmp/sdbtt_backup_$$.log"
+    local backup_log="/tmp/echoDB_backup_$$.log"
     echo "Starting backup of database '$db_name'" > "$backup_log"
 
     # Calculate an estimate of the database size for progress
@@ -147,7 +147,7 @@ backup_database_with_progress() {
         echo "Total tables to backup: $table_count" >> "$backup_log"
 
         # Create a temporary status file that mysqldump will update
-        local status_file="/tmp/sdbtt_dump_status_$$.txt"
+        local status_file="/tmp/echoDB_dump_status_$$.txt"
 
         if [ "$backup_type" = "compressed" ]; then
             echo "Creating compressed backup..." >> "$backup_log"
@@ -267,7 +267,7 @@ select_tables_for_backup() {
     local backup_file="$backup_dir/${db_name}_custom_backup_${timestamp}.sql.gz"
 
     # Create a temporary log file for backup progress
-    local backup_log="/tmp/sdbtt_backup_$$.log"
+    local backup_log="/tmp/echoDB_backup_$$.log"
     echo "Starting custom backup of selected tables from database '$db_name'" > "$backup_log"
     echo "Selected tables: $selected_tables" >> "$backup_log"
 
@@ -280,7 +280,7 @@ select_tables_for_backup() {
         echo "Beginning backup process..." >> "$backup_log"
 
         # Create a temporary status file
-        local status_file="/tmp/sdbtt_dump_status_$$.txt"
+        local status_file="/tmp/echoDB_dump_status_$$.txt"
 
         # Use mysqldump with progress reporting and selected tables
         if mysqldump -u "$MYSQL_USER" -p"$MYSQL_PASS" \
@@ -364,7 +364,7 @@ restore_database_with_progress() {
 
     # Select backup file
     local selected_backup
-    selected_backup=$(dialog --colors --clear --backtitle "\Z6SDBTT Restore Backup\Z0" \
+    selected_backup=$(dialog --colors --clear --backtitle "\Z6echoDB Restore Backup\Z0" \
         --title "Select Backup File" \
         --menu "Choose a backup file to restore:" 20 76 15 \
         "${backups[@]}" 3>&1 1>&2 2>&3)
@@ -402,7 +402,7 @@ restore_database_with_progress() {
     fi
 
     # Create a temporary log file for restore progress
-    local restore_log="/tmp/sdbtt_restore_$$.log"
+    local restore_log="/tmp/echoDB_restore_$$.log"
     echo "Starting restoration of database '$target_db' from backup $(basename "$selected_backup")" > "$restore_log"
 
     # Display progress dialog

@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT MySQL Operations Module
+# echoDB MySQL Operations Module
 # Handles core MySQL database operations
 
 # Function to check and test MySQL connection
@@ -60,7 +60,7 @@ enhanced_mysql_admin_menu() {
 
     while true; do
         local choice
-        choice=$(dialog --colors --clear --backtitle "\Z6SDBTT MySQL Administration\Z0" \
+        choice=$(dialog --colors --clear --backtitle "\Z6echoDB MySQL Administration\Z0" \
             --title "MySQL Administration" --menu "Choose an option:" 20 70 18 \
             "1" "\Z6List All Databases\Z0" \
             "2" "\Z6View Database Details\Z0" \
@@ -309,7 +309,7 @@ check_database_integrity() {
     fi
 
     # Create a temporary log file for check progress
-    local check_log_file="/tmp/sdbtt_check_$.log"
+    local check_log_file="/tmp/echoDB_check_$.log"
     echo "Starting integrity check for database '$db_name'" > "$check_log_file"
 
     # Calculate total tables for progress
@@ -408,7 +408,7 @@ optimize_tables() {
     fi
 
     # Create a temporary log file for optimization progress
-    local opt_log_file="/tmp/sdbtt_optimize_$.log"
+    local opt_log_file="/tmp/echoDB_optimize_$.log"
     echo "Starting optimization for database '$db_name'" > "$opt_log_file"
 
     # Calculate total tables for progress
@@ -646,7 +646,7 @@ rename_database() {
     fi
 
     # Create a temporary log file for rename progress
-    local rename_log="/tmp/sdbtt_rename_$$.log"
+    local rename_log="/tmp/echoDB_rename_$$.log"
     echo "Starting rename of database '$source_db' to '$target_db'" > "$rename_log"
 
     # Display progress dialog
@@ -938,7 +938,7 @@ import_databases_menu() {
 
     # Options for how to process the files
     local process_choice
-    process_choice=$(dialog --colors --clear --backtitle "\Z6SDBTT - Import\Z0" \
+    process_choice=$(dialog --colors --clear --backtitle "\Z6echoDB - Import\Z0" \
         --title "Process SQL Files" \
         --menu "Found \Z5${#sql_files[@]}\Z0 SQL files. Choose an option:" 15 76 4 \
         "1" "\Z6List and select individual files to import\Z0" \
@@ -951,7 +951,7 @@ import_databases_menu() {
         1)
             # Multi-select dialog for individual files
             local selected_files
-            selected_files=$(dialog --colors --clear --backtitle "\Z6SDBTT - Import\Z0" \
+            selected_files=$(dialog --colors --clear --backtitle "\Z6echoDB - Import\Z0" \
                 --title "Select SQL Files to Import" \
                 --checklist "Select files to import:" 20 76 12 \
                 "${sql_files[@]}" 3>&1 1>&2 2>&3)
@@ -1016,7 +1016,7 @@ transfer_replace_database() {
 
     # Select a single SQL file
     local selected_file
-    selected_file=$(dialog --colors --clear --backtitle "\Z6SDBTT - Transfer Database\Z0" \
+    selected_file=$(dialog --colors --clear --backtitle "\Z6echoDB - Transfer Database\Z0" \
         --title "Select Source SQL File" \
         --menu "Select the SQL file to import:" 20 76 12 \
         "${sql_files[@]}" 3>&1 1>&2 2>&3)

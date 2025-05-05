@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT UI Module
+# echoDB UI Module
 # Handles UI components, dialog, and display functions
 
 # We need to ensure these variables are set for the dialog interface
@@ -48,7 +48,7 @@ setup_dialog_theme() {
     fi
 
     # Create a unique temporary file for this process
-    local dialogrc_file="/tmp/dialogrc_sdbtt_$"
+    local dialogrc_file="/tmp/dialogrc_echoDB_$"
 
     # Create the dialog configuration file with retrowave colors
     # Using more compatible dialog theme settings
@@ -238,7 +238,7 @@ set_term_appearance() {
     # Only perform these operations if we're in a terminal that supports colors
     if [ "$USE_COLORS" -eq 1 ]; then
         # Set terminal title
-        echo -ne "\033]0;SDBTT - Retrowave\007"
+        echo -ne "\033]0;echoDB - Retrowave\007"
 
         # Simple clear with basic retrowave effect
         clear
@@ -290,7 +290,7 @@ EOF
         # Plain text version for terminals without color support
         cat << EOF
 ==================================================
-           SDBTT: Simple Database Transfer Tool
+           echoDB: Simple Database Transfer Tool
                      Version $VERSION
 ==================================================
 EOF
@@ -301,8 +301,8 @@ EOF
 
 # Display the about information with enhanced colors
 show_about() {
-    dialog --colors --title "About SDBTT" --msgbox "\
-\Z5Simple Database Transfer Tool (SDBTT) v$VERSION\Z0
+    dialog --colors --title "About echoDB" --msgbox "\
+\Z5Simple Database Transfer Tool (echoDB) v$VERSION\Z0
 \n
 A tool for importing and managing MySQL databases with ease.
 \n
@@ -324,8 +324,8 @@ A tool for importing and managing MySQL databases with ease.
 
 # Help screen with enhanced theming
 show_help() {
-    dialog --colors --title "SDBTT Help" --msgbox "\
-\Z5Simple Database Transfer Tool (SDBTT) Help\Z0
+    dialog --colors --title "echoDB Help" --msgbox "\
+\Z5Simple Database Transfer Tool (echoDB) Help\Z0
 ------------------------------------
 
 This tool helps you import MySQL databases from SQL files with the following features:
@@ -349,9 +349,9 @@ This tool helps you import MySQL databases from SQL files with the following fea
 5. Review and confirm the import plan
 
 \Z5Command-line options:\Z0
---install    Install SDBTT to system
---update     Update SDBTT from GitHub
---remove     Remove SDBTT from system
+--install    Install echoDB to system
+--update     Update echoDB from GitHub
+--remove     Remove echoDB from system
 --help       Show this help message
 --debug      Enable debug logging
 --no-dialog  Disable dialog UI
@@ -379,7 +379,7 @@ show_main_menu() {
 
     while true; do
         # Try to use a simpler menu format with retrowave colors
-        choice=$(dialog --colors --clear --backtitle "\Z6SDBTT - Simple Database Transfer Tool v$VERSION\Z0" \
+        choice=$(dialog --colors --clear --backtitle "\Z6echoDB - Simple Database Transfer Tool v$VERSION\Z0" \
             --title "Main Menu" --menu "Choose an option:" 18 60 12 \
             "1" "\Z6Import Databases\Z0" \
             "2" "\Z6Transfer and Replace Database\Z0" \
@@ -390,7 +390,7 @@ show_main_menu() {
             "7" "\Z6Save Current Settings\Z0" \
             "8" "\Z6Load Saved Settings\Z0" \
             "9" "\Z6Check for Updates\Z0" \
-            "10" "\Z6About SDBTT\Z0" \
+            "10" "\Z6About echoDB\Z0" \
             "11" "\Z6Help\Z0" \
             "0" "\Z1Exit\Z0" \
             3>&1 1>&2 2>&3)
@@ -455,11 +455,11 @@ view_logs() {
     # List log files
     while IFS= read -r log; do
         if [ -f "$log" ]; then
-            local log_date=$(basename "$log" | sed 's/sdbtt_\(.*\)\.log/\1/')
+            local log_date=$(basename "$log" | sed 's/echoDB_\(.*\)\.log/\1/')
             logs+=("$log" "[$i] \Z6Log from $log_date\Z0")
             ((i++))
         fi
-    done < <(find "$LOG_DIR" -maxdepth 1 -type f -name "sdbtt_*.log" | sort -r)
+    done < <(find "$LOG_DIR" -maxdepth 1 -type f -name "echoDB_*.log" | sort -r)
 
     if [ ${#logs[@]} -eq 0 ]; then
         dialog --colors --title "No Logs Found" --msgbox "\Z1No log files found in $LOG_DIR." 8 60
@@ -469,7 +469,7 @@ view_logs() {
     logs+=("BACK" "\Z1⬅️ [ Back to Main Menu ]\Z0")
 
     local selection
-    selection=$(dialog --colors --clear --backtitle "\Z6SDBTT - Logs\Z0" \
+    selection=$(dialog --colors --clear --backtitle "\Z6echoDB - Logs\Z0" \
         --title "View Logs" \
         --menu "Select a log file to view:" 15 76 8 \
         "${logs[@]}" 3>&1 1>&2 2>&3)
@@ -491,7 +491,7 @@ view_logs() {
 
             # View log file with enhanced formatting
             # Process the log file to add color to key events
-            local temp_log="/tmp/sdbtt_colored_log_$"
+            local temp_log="/tmp/echoDB_colored_log_$"
             cat "$selection" |
                 sed 's/\[ERROR\]/\\Z1[ERROR]\\Z0/g' |
                 sed 's/\[WARNING\]/\\Z3[WARNING]\\Z0/g' |

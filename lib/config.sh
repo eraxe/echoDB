@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT Configuration Module
+# echoDB Configuration Module
 # Handles loading, saving and managing configuration
 
 # Load saved configuration
@@ -16,7 +16,7 @@ load_config() {
 save_config() {
     mkdir -p "$CONFIG_DIR"
     cat > "$CONFIG_FILE" << EOF
-# SDBTT Configuration
+# echoDB Configuration
 # Last updated: $(date)
 SQL_DIR="$SQL_DIR"
 DB_PREFIX="$DB_PREFIX"
@@ -69,7 +69,7 @@ configure_settings() {
     local settings_menu
 
     while true; do
-        settings_menu=$(dialog --colors --clear --backtitle "\Z6SDBTT - Configuration\Z0" \
+        settings_menu=$(dialog --colors --clear --backtitle "\Z6echoDB - Configuration\Z0" \
             --title "Configure Settings" --menu "Choose a setting to configure:" 15 60 6 \
             "1" "\Z5MySQL Username\Z0 (Current: ${MYSQL_USER:-not set})" \
             "2" "\Z5Database Owner\Z0 (Current: ${DB_OWNER:-not set})" \
@@ -155,7 +155,7 @@ browse_directories() {
         options+=("SELECT_DIR" "\Z2✅ [ Select Current Directory ]\Z0")
         options+=("BACK" "\Z1⬅️ [ Back to Main Menu ]\Z0")
 
-        selection=$(dialog --colors --clear --backtitle "\Z6SDBTT - Directory Browser\Z0" \
+        selection=$(dialog --colors --clear --backtitle "\Z6echoDB - Directory Browser\Z0" \
             --title "Directory Browser" \
             --menu "Current: \Z5$current_dir\Z0\n\nNavigate to directory containing SQL files:" 20 76 12 \
             "${options[@]}" 3>&1 1>&2 2>&3)
@@ -223,7 +223,7 @@ select_from_recent_dirs() {
     dirs+=("BACK" "\Z1⬅️ [ Back to Main Menu ]\Z0")
 
     local selection
-    selection=$(dialog --colors --clear --backtitle "\Z6SDBTT - Recent Directories\Z0" \
+    selection=$(dialog --colors --clear --backtitle "\Z6echoDB - Recent Directories\Z0" \
         --title "Recent Directories" \
         --menu "Select a recently used directory:" 15 76 8 \
         "${dirs[@]}" 3>&1 1>&2 2>&3)

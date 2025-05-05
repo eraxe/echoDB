@@ -1,5 +1,5 @@
 #!/bin/bash
-# SDBTT Charset Module
+# echoDB Charset Module
 # Handles character set conversion and fixes
 
 # Improved charset handling function with safety checks
