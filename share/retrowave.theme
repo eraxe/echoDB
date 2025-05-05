@@ -1,0 +1,44 @@
+# Dialog configuration with Retrowave theme
+# Set aspect-ratio and screen edge
+aspect = 0
+separate_widget = ""
+tab_len = 0
+visit_items = OFF
+use_shadow = ON
+use_colors = ON
+
+# Retrowave color scheme for better compatibility
+screen_color = (BLACK,BLACK,OFF)
+shadow_color = (BLACK,BLACK,OFF)
+dialog_color = (MAGENTA,BLACK,OFF)
+title_color = (MAGENTA,BLACK,ON)
+border_color = (MAGENTA,BLACK,ON)
+button_active_color = (BLACK,MAGENTA,ON)
+button_inactive_color = (CYAN,BLACK,OFF)
+button_key_active_color = (BLACK,MAGENTA,ON)
+button_key_inactive_color = (CYAN,BLACK,OFF)
+button_label_active_color = (BLACK,MAGENTA,ON)
+button_label_inactive_color = (CYAN,BLACK,OFF)
+inputbox_color = (CYAN,BLACK,OFF)
+inputbox_border_color = (MAGENTA,BLACK,ON)
+searchbox_color = (CYAN,BLACK,OFF)
+searchbox_title_color = (MAGENTA,BLACK,ON)
+searchbox_border_color = (MAGENTA,BLACK,ON)
+position_indicator_color = (YELLOW,BLACK,ON)
+menubox_color = (CYAN,BLACK,OFF)
+menubox_border_color = (MAGENTA,BLACK,ON)
+item_color = (CYAN,BLACK,OFF)
+item_selected_color = (BLACK,MAGENTA,ON)
+tag_color = (MAGENTA,BLACK,ON)
+tag_selected_color = (BLACK,MAGENTA,ON)
+tag_key_color = (MAGENTA,BLACK,ON)
+tag_key_selected_color = (BLACK,MAGENTA,ON)
+check_color = (CYAN,BLACK,OFF)
+check_selected_color = (BLACK,MAGENTA,ON)
+uarrow_color = (MAGENTA,BLACK,ON)
+darrow_color = (MAGENTA,BLACK,ON)
+itemhelp_color = (CYAN,BLACK,OFF)
+form_active_text_color = (BLACK,MAGENTA,ON)
+form_text_color = (CYAN,BLACK,ON)
+form_item_readonly_color = (CYAN,BLACK,ON)
+gauge_color = (MAGENTA,BLACK,ON)

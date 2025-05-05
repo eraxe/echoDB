@@ -1,0 +1,31 @@
+#!/bin/bash
+# SDBTT: Simple Database Transfer Tool
+# Main executable script
+# Version: 1.3.0
+
+# Determine script location to find modules
+if [[ -L "$0" ]]; then
+    # Handle symlinks
+    SCRIPT_PATH=$(readlink -f "$0")
+    SCRIPT_DIR=$(dirname "$SCRIPT_PATH")
+else
+    SCRIPT_DIR=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
+fi
+
+# Path to library directory
+LIB_DIR="${SCRIPT_DIR}/../lib"
+SHARE_DIR="${SCRIPT_DIR}/../share"
+CONFIG_DIR="${SCRIPT_DIR}/../config"
+
+# Source the modules
+source "${LIB_DIR}/core.sh"
+source "${LIB_DIR}/config.sh"
+source "${LIB_DIR}/ui.sh"
+source "${LIB_DIR}/mysql.sh"
+source "${LIB_DIR}/user.sh"
+source "${LIB_DIR}/charset.sh"
+source "${LIB_DIR}/backup.sh"
+source "${LIB_DIR}/utils.sh"
+
+# Call the main function from core module
+main "$@"
