@@ -195,6 +195,7 @@ attempt_split_import() {
 }
 
 # Improved import_sql_file function with better error handling and backup/restore
+# Import the SQL file using improved version with Gum
 improved_import_sql_file() {
     local db_name="$1"
     local sql_file="$2"
@@ -202,21 +203,16 @@ improved_import_sql_file() {
 
     log_message "Preparing to import $sql_file into database $db_name"
 
-    # First, analyze the file encoding
-    local file_encoding
-    if command -v file >/dev/null 2>&1; then
-        file_encoding=$(file -bi "$sql_file" | sed -e 's/.*charset=//')
-        log_message "Detected file encoding: $file_encoding"
-    else
-        file_encoding="unknown"
-        log_message "Could not detect file encoding (file command not available)"
-    fi
+    # Use Gum spinner for file encoding analysis
+    gum_spin "Analyzing file encoding..." "file -bi \"$sql_file\" > /tmp/file_encoding"
+    local file_encoding=$(cat /tmp/file_encoding | sed -e 's/.*charset=//')
+    log_message "Detected file encoding: $file_encoding"
 
     # Create a backup of the database if it exists
     local backup_file=""
     if mysql -u "$MYSQL_USER" -p"$MYSQL_PASS" -e "USE \`$db_name\`" 2>/dev/null; then
         log_message "Database $db_name already exists. Creating backup before import."
-        backup_file=$(backup_database "$db_name")
+        backup_file=$(gum_spin "Creating backup..." "backup_database \"$db_name\"")
         if [ $? -ne 0 ]; then
             log_message "WARNING: Failed to create backup of existing database $db_name. Proceeding with caution."
         else
@@ -224,117 +220,65 @@ improved_import_sql_file() {
         fi
     fi
 
-    # Process the SQL file with encoding fixes - convert to UTF-8 if needed
+    # Process the SQL file with charset handling
     log_message "Converting file to UTF-8 with encoding fixes..."
+    gum_spin "Converting file to UTF-8..." "
+        # Create a temporary directory for intermediary processed files
+        local tmp_process_dir=\"$TEMP_DIR/process_$db_name\"
+        mkdir -p \"$tmp_process_dir\"
 
-    # Create a temporary directory for intermediary processed files
-    local tmp_process_dir="$TEMP_DIR/process_$db_name"
-    mkdir -p "$tmp_process_dir"
+        # First step: Convert encoding to UTF-8 if needed
+        local utf8_file=\"$tmp_process_dir/utf8_converted.sql\"
 
-    # First step: Convert encoding to UTF-8 if needed
-    local utf8_file="$tmp_process_dir/utf8_converted.sql"
-
-    if [ "$file_encoding" = "unknown" ] || [ "$file_encoding" = "utf-8" ] || [ "$file_encoding" = "us-ascii" ]; then
-        # File is already UTF-8 or ASCII (subset of UTF-8), just copy
-        cp "$sql_file" "$utf8_file"
-    else
-        # Try to convert to UTF-8
-        if command -v iconv >/dev/null 2>&1; then
-            log_message "Converting from $file_encoding to UTF-8 with iconv..."
-            if ! iconv -f "$file_encoding" -t UTF-8//TRANSLIT "$sql_file" > "$utf8_file" 2>> "$LOG_FILE"; then
-                log_message "Warning: iconv conversion failed, trying direct copy..."
-                cp "$sql_file" "$utf8_file"
-            fi
+        if [ \"$file_encoding\" = \"unknown\" ] || [ \"$file_encoding\" = \"utf-8\" ] || [ \"$file_encoding\" = \"us-ascii\" ]; then
+            # File is already UTF-8 or ASCII (subset of UTF-8), just copy
+            cp \"$sql_file\" \"$utf8_file\"
         else
-            # No iconv available, just copy and hope for the best
-            log_message "Warning: iconv not available, using original file..."
-            cp "$sql_file" "$utf8_file"
+            # Try to convert to UTF-8
+            if command -v iconv >/dev/null 2>&1; then
+                iconv -f \"$file_encoding\" -t UTF-8//TRANSLIT \"$sql_file\" > \"$utf8_file\" 2>> \"$LOG_FILE\" || cp \"$sql_file\" \"$utf8_file\"
+            else
+                # No iconv available, just copy and hope for the best
+                cp \"$sql_file\" \"$utf8_file\"
+            fi
         fi
-    fi
+    "
 
-    # Second step: Fix charset declarations and other issues using improved charset handling
-    log_message "Applying charset fixes and other corrections..."
-    if ! improved_charset_handling "$utf8_file" "$processed_file" "$LOG_FILE"; then
+    # Apply charset fixes
+    if ! gum_spin "Applying charset fixes..." "improved_charset_handling \"$utf8_file\" \"$processed_file\" \"$LOG_FILE\""; then
         log_message "ERROR: Failed to process charset in SQL file."
         if [ -n "$backup_file" ]; then
-            log_message "Attempting to restore database from backup..."
-            restore_database "$db_name" "$backup_file"
+            gum_spin "Restoring from backup..." "restore_database \"$db_name\" \"$backup_file\""
         fi
         return 1
     fi
 
-    log_message "File processed for encoding issues. Attempting import..."
-
     # Create or reset the database
     create_database "$db_name"
 
-    # Create a table counter file to monitor progress
-    local table_counter_file="$TEMP_DIR/${db_name}_table_count.txt"
-    echo "0" > "$table_counter_file"
-
     # Try direct import with charset parameters
     log_message "Attempting direct import with charset parameters for $db_name..."
-    if mysql --default-character-set=utf8mb4 -u "$MYSQL_USER" -p"$MYSQL_PASS" "$db_name" < "$processed_file" 2> "$TEMP_DIR/${db_name}_import_errors.log"; then
-        # Count tables to verify success
-        local table_count
-        table_count=$(mysql -u "$MYSQL_USER" -p"$MYSQL_PASS" -N -e "SELECT COUNT(TABLE_NAME) FROM information_schema.tables WHERE table_schema = '$db_name';" 2>/dev/null)
+    if ! gum_spin "Importing database..." "mysql --default-character-set=utf8mb4 -u \"$MYSQL_USER\" -p\"$MYSQL_PASS\" \"$db_name\" < \"$processed_file\" 2> \"$TEMP_DIR/${db_name}_import_errors.log\""; then
+        # Check the error log
+        log_message "Direct import encountered issues. Analyzing errors..."
+        cat "$TEMP_DIR/${db_name}_import_errors.log" >> "$LOG_FILE"
 
-        if [ -n "$table_count" ] && [ "$table_count" -gt 0 ]; then
-            log_message "Import successful - $table_count tables created in $db_name"
-            fix_database_charset "$db_name"
-            return 0
+        # Try alternative methods...
+        log_message "Attempting import with SOURCE command..."
+        if ! gum_spin "Trying SOURCE import..." "mysql -u \"$MYSQL_USER\" -p\"$MYSQL_PASS\" --default-character-set=utf8mb4 \"$db_name\" -e \"SOURCE $processed_file;\" 2> \"$TEMP_DIR/${db_name}_source_errors.log\""; then
+            # Try split import as last resort
+            log_message "Both import methods failed. Trying split SQL import..."
+            if ! gum_spin "Attempting split import..." "attempt_split_import \"$db_name\" \"$processed_file\""; then
+                # All methods failed, restore from backup
+                if [ -n "$backup_file" ]; then
+                    gum_spin "Restoring database..." "restore_database \"$db_name\" \"$backup_file\""
+                fi
+                return 1
+            fi
         fi
     fi
 
-    # Check the error log for specific issues
-    log_message "Direct import encountered issues. Analyzing errors..."
-    cat "$TEMP_DIR/${db_name}_import_errors.log" >> "$LOG_FILE"
-
-    # Count specific error types to better understand issues
-    local charset_errors=$(grep "Unknown character set" "$TEMP_DIR/${db_name}_import_errors.log" | wc -l)
-    local table_errors=$(grep "Table.*doesn't exist" "$TEMP_DIR/${db_name}_import_errors.log" | wc -l)
-    local syntax_errors=$(grep "syntax error" "$TEMP_DIR/${db_name}_import_errors.log" | wc -l)
-
-    log_message "Error analysis: Charset errors: $charset_errors, Table missing errors: $table_errors, Syntax errors: $syntax_errors"
-
-    # Try alternative method: Use SOURCE command
-    log_message "Attempting import with SOURCE command..."
-    mysql -u "$MYSQL_USER" -p"$MYSQL_PASS" --default-character-set=utf8mb4 "$db_name" -e "SOURCE $processed_file;" 2> "$TEMP_DIR/${db_name}_source_errors.log"
-
-    # Check if import was successful
-    local table_count
-    table_count=$(mysql -u "$MYSQL_USER" -p"$MYSQL_PASS" -N -e "SELECT COUNT(TABLE_NAME) FROM information_schema.tables WHERE table_schema = '$db_name';" 2>/dev/null)
-
-    if [ -n "$table_count" ] && [ "$table_count" -gt 0 ]; then
-        log_message "Import via SOURCE command successful - $table_count tables created in $db_name"
-        fix_database_charset "$db_name"
-        return 0
-    fi
-
-    # If we're here, both methods failed
-    cat "$TEMP_DIR/${db_name}_source_errors.log" >> "$LOG_FILE"
-    log_message "Both import methods failed. As a last resort, trying split SQL import..."
-
-    # Try import by splitting file
-    if attempt_split_import "$db_name" "$processed_file"; then
-        log_message "Split SQL import successful for $db_name"
-        fix_database_charset "$db_name"
-        return 0
-    fi
-
-    # All import methods failed, restore from backup
-    log_message "All import methods failed for $db_name"
-
-    if [ -n "$backup_file" ]; then
-        log_message "Restoring database from backup..."
-        restore_database "$db_name" "$backup_file"
-        log_message "Database restored to previous state."
-    fi
-
-    log_message "Import failed. Manual inspection required:"
-    log_message "mysql -u root -p --default-character-set=utf8mb4"
-    log_message "CREATE DATABASE $db_name CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-    log_message "USE $db_name;"
-    log_message "SOURCE $sql_file;"
-    return 1
+    # Fix charset if import succeeded
+    gum_spin "Fixing database charset..." "fix_database_charset \"$db_name\""
+    return 0
 }

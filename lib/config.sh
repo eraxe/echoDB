@@ -65,36 +65,35 @@ get_password() {
 }
 
 # Configure settings menu with enhanced theming
+# Configure settings menu with Gum
 configure_settings() {
-    local settings_menu
-
     while true; do
-        settings_menu=$(dialog --colors --clear --backtitle "\Z6echoDB - Configuration\Z0" \
-            --title "Configure Settings" --menu "Choose a setting to configure:" 15 60 6 \
-            "1" "\Z5MySQL Username\Z0 (Current: ${MYSQL_USER:-not set})" \
-            "2" "\Z5Database Owner\Z0 (Current: ${DB_OWNER:-not set})" \
-            "3" "\Z5Database Prefix\Z0 (Current: ${DB_PREFIX:-not set})" \
-            "4" "\Z5SQL File Pattern\Z0 (Current: ${SQL_PATTERN:-*.sql})" \
-            "5" "\Z5MySQL Password\Z0" \
-            "6" "\Z1Back to Main Menu\Z0" \
-            3>&1 1>&2 2>&3)
+        clear
+        gum_header
 
-        case $settings_menu in
-            1)
-                MYSQL_USER=$(dialog --colors --title "MySQL Username" --inputbox "Enter MySQL username:" 8 60 "${MYSQL_USER:-root}" 3>&1 1>&2 2>&3)
+        local choice=$(gum_menu "Configure Settings" \
+            "MySQL Username (Current: ${MYSQL_USER:-not set})" \
+            "Database Owner (Current: ${DB_OWNER:-not set})" \
+            "Database Prefix (Current: ${DB_PREFIX:-not set})" \
+            "SQL File Pattern (Current: ${SQL_PATTERN:-*.sql})" \
+            "MySQL Password" \
+            "Back to Main Menu")
+
+        case "$choice" in
+            "MySQL Username"*)
+                MYSQL_USER=$(gum_input "Enter MySQL username" "${MYSQL_USER:-root}")
                 ;;
-            2)
-                DB_OWNER=$(dialog --colors --title "Database Owner" --inputbox "Enter database owner username:" 8 60 "${DB_OWNER}" 3>&1 1>&2 2>&3)
+            "Database Owner"*)
+                DB_OWNER=$(gum_input "Enter database owner username" "${DB_OWNER}")
                 ;;
-            3)
-                DB_PREFIX=$(dialog --colors --title "Database Prefix" --inputbox "Enter database prefix:" 8 60 "${DB_PREFIX}" 3>&1 1>&2 2>&3)
+            "Database Prefix"*)
+                DB_PREFIX=$(gum_input "Enter database prefix" "${DB_PREFIX}")
                 ;;
-            4)
-                SQL_PATTERN=$(dialog --colors --title "SQL File Pattern" --inputbox "Enter SQL file pattern:" 8 60 "${SQL_PATTERN:-*.sql}" 3>&1 1>&2 2>&3)
+            "SQL File Pattern"*)
+                SQL_PATTERN=$(gum_input "Enter SQL file pattern" "${SQL_PATTERN:-*.sql}")
                 ;;
-            5)
-                local password
-                password=$(dialog --colors --title "MySQL Password" --passwordbox "Enter MySQL password for user '${MYSQL_USER:-root}':" 8 60 3>&1 1>&2 2>&3)
+            "MySQL Password")
+                local password=$(gum_password "Enter MySQL password for user '${MYSQL_USER:-root}'")
 
                 if [ -n "$password" ]; then
                     # Store the password securely
@@ -103,13 +102,13 @@ configure_settings() {
 
                     # Verify MySQL connection works
                     if ! mysql -u "${MYSQL_USER:-root}" -p"$password" -e "SELECT 1" >/dev/null 2>&1; then
-                        dialog --colors --title "Connection Error" --msgbox "\Z1Failed to connect to MySQL server. Please check credentials." 8 60
+                        gum_message "error" "Failed to connect to MySQL server. Please check credentials."
                     else
-                        dialog --colors --title "Connection Success" --msgbox "\Z6Successfully connected to MySQL server and securely stored password." 8 60
+                        gum_message "success" "Successfully connected to MySQL server and securely stored password."
                     fi
                 fi
                 ;;
-            6|"")
+            "Back to Main Menu"|"")
                 break
                 ;;
         esac
@@ -117,53 +116,85 @@ configure_settings() {
 }
 
 # Browse and select directories with enhanced theming
+# Browse and select directories with Gum
 browse_directories() {
     local current_dir="${SQL_DIR:-$HOME}"
-    local selection
 
-    while true; do
-        # Get directories in current path
-        local dirs=()
-        local files=()
+    while true; {
+        clear
+        gum_header
 
-        # Add parent directory option
-        dirs+=("../" "↑ Parent Directory")
+        # Show current directory
+        gum_info "Directory Browser" "Current" "$current_dir"
+        echo ""
 
-        # List directories and SQL files
+        # Create directory options
+        local options=("../")
+
+        # Add directories
         while IFS= read -r dir; do
             if [ -d "$dir" ]; then
-                # Format for display with better colors
-                local display_name="${dir##*/}/"
-                dirs+=("$dir/" "\Z6📁 $display_name\Z0")
+                options+=("$dir/")
             fi
         done < <(find "$current_dir" -maxdepth 1 -type d -not -path "$current_dir" | sort)
 
-        # List SQL files if pattern is defined
-        if [ -n "$SQL_PATTERN" ]; then
-            while IFS= read -r file; do
-                if [ -f "$file" ]; then
-                    local display_name="${file##*/}"
-                    files+=("$file" "\Z6📄 $display_name\Z0")
-                fi
-            done < <(find "$current_dir" -maxdepth 1 -type f -name "$SQL_PATTERN" | sort)
-        fi
+        # Add option to select current directory
+        options+=("SELECT_THIS_DIR")
+        options+=("BACK_TO_MENU")
 
-        # Combine directories and files
-        local options=("${dirs[@]}" "${files[@]}")
+        # Format display of options
+        local formatted_options=()
+        for opt in "${options[@]}"; do
+            case "$opt" in
+                "../")
+                    formatted_options+=("↑ Parent Directory")
+                    ;;
+                "SELECT_THIS_DIR")
+                    formatted_options+=("✓ Select Current Directory")
+                    ;;
+                "BACK_TO_MENU")
+                    formatted_options+=("← Back to Main Menu")
+                    ;;
+                *)
+                    # Format directory name
+                    local display_name="${opt##*/}"
+                    formatted_options+=("📁 $display_name")
+                    ;;
+            esac
+        done
 
-        # Add options to select current directory and to go back
-        options+=("SELECT_DIR" "\Z2✅ [ Select Current Directory ]\Z0")
-        options+=("BACK" "\Z1⬅️ [ Back to Main Menu ]\Z0")
+        # Show menu
+        local selection_text=$(gum_menu "Navigate to directory containing SQL files:" "${formatted_options[@]}")
 
-        selection=$(dialog --colors --clear --backtitle "\Z6echoDB - Directory Browser\Z0" \
-            --title "Directory Browser" \
-            --menu "Current: \Z5$current_dir\Z0\n\nNavigate to directory containing SQL files:" 20 76 12 \
-            "${options[@]}" 3>&1 1>&2 2>&3)
+        # Convert selection text back to path
+        local selection=""
+        case "$selection_text" in
+            "↑ Parent Directory")
+                selection="../"
+                ;;
+            "✓ Select Current Directory")
+                selection="SELECT_THIS_DIR"
+                ;;
+            "← Back to Main Menu")
+                selection="BACK_TO_MENU"
+                ;;
+            *)
+                # Extract directory name from display format
+                local dir_name="${selection_text#📁 }"
+                # Find matching directory in options
+                for opt in "${options[@]}"; do
+                    if [[ "$opt" == *"$dir_name" ]]; then
+                        selection="$opt"
+                        break
+                    fi
+                done
+                ;;
+        esac
 
-        case $selection in
-            "SELECT_DIR")
+        case "$selection" in
+            "SELECT_THIS_DIR")
                 SQL_DIR="$current_dir"
-                dialog --colors --title "Directory Selected" --msgbox "\Z6Selected directory: $SQL_DIR" 8 60
+                gum_message "success" "Selected directory: $SQL_DIR"
 
                 # Add to last directories list (max 5)
                 if [ -z "$LAST_DIRECTORIES" ]; then
@@ -171,7 +202,6 @@ browse_directories() {
                 else
                     # Add to beginning of list and keep unique entries
                     LAST_DIRECTORIES="$SQL_DIR:$(echo "$LAST_DIRECTORIES" | sed "s|$SQL_DIR||g" | sed "s|::*|:|g" | sed "s|^:|:|g" | sed "s|:$||g")"
-
                     # Keep only the 5 most recent directories
                     LAST_DIRECTORIES=$(echo "$LAST_DIRECTORIES" | cut -d: -f1-5)
                 fi
@@ -181,20 +211,17 @@ browse_directories() {
             "../")
                 current_dir="$(dirname "$current_dir")"
                 ;;
-            "BACK"|"")
+            "BACK_TO_MENU")
                 break
                 ;;
             *)
                 if [ -d "$selection" ]; then
                     current_dir="$selection"
-                elif [ -f "$selection" ]; then
-                    dialog --colors --title "File Selected" --msgbox "\Z6Selected file: $selection\n\nThis is a file, not a directory. Please select a directory." 10 60
                 fi
                 ;;
         esac
-    done
+    }
 }
-
 # Select from previously used directories with enhanced theming
 select_from_recent_dirs() {
     if [ -z "$LAST_DIRECTORIES" ]; then

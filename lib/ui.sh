@@ -372,81 +372,63 @@ The tool saves your settings for future use and keeps logs of all operations.
 }
 
 # Display main menu with enhanced theming
+# Display main menu with Gum
 show_main_menu() {
-    local choice
-
     debug_log "Displaying main menu"
 
     while true; do
-        # Try to use a simpler menu format with retrowave colors
-        choice=$(dialog --colors --clear --backtitle "\Z6echoDB - Simple Database Transfer Tool v$VERSION\Z0" \
-            --title "Main Menu" --menu "Choose an option:" 18 60 12 \
-            "1" "\Z6Import Databases\Z0" \
-            "2" "\Z6Transfer and Replace Database\Z0" \
-            "3" "\Z6Configure Settings\Z0" \
-            "4" "\Z6Browse & Select Directories\Z0" \
-            "5" "\Z6MySQL Administration\Z0" \
-            "6" "\Z6View Logs\Z0" \
-            "7" "\Z6Save Current Settings\Z0" \
-            "8" "\Z6Load Saved Settings\Z0" \
-            "9" "\Z6Check for Updates\Z0" \
-            "10" "\Z6About echoDB\Z0" \
-            "11" "\Z6Help\Z0" \
-            "0" "\Z1Exit\Z0" \
-            3>&1 1>&2 2>&3)
+        # Display the header
+        clear
+        gum_header
 
-        local menu_exit=$?
-        debug_log "Menu returned: '$choice' with exit code $menu_exit"
+        # Show the menu options
+        local choice=$(gum_menu "Main Menu" \
+            "Import Databases" \
+            "Transfer and Replace Database" \
+            "Configure Settings" \
+            "Browse & Select Directories" \
+            "MySQL Administration" \
+            "View Logs" \
+            "Save Current Settings" \
+            "Load Saved Settings" \
+            "Check for Updates" \
+            "About echoDB" \
+            "Help" \
+            "Exit")
 
-        if [ $menu_exit -ne 0 ]; then
-            # Exit code is not 0, check if it's a normal cancel
-            if [ $menu_exit -ne 1 ]; then
-                debug_log "Dialog menu failed with code $menu_exit"
-                echo "ERROR: Dialog menu failed, trying to continue..." >&2
-            fi
-            choice=""
-        fi
-
-        case $choice in
-            1) import_databases_menu ;;
-            2) transfer_replace_database ;;
-            3) configure_settings ;;
-            4) browse_directories ;;
-            5) enhanced_mysql_admin_menu ;;
-            6) view_logs ;;
-            7) save_config ;;
-            8)
+        case "$choice" in
+            "Import Databases") import_databases_menu ;;
+            "Transfer and Replace Database") transfer_replace_database ;;
+            "Configure Settings") configure_settings ;;
+            "Browse & Select Directories") browse_directories ;;
+            "MySQL Administration") enhanced_mysql_admin_menu ;;
+            "View Logs") view_logs ;;
+            "Save Current Settings") save_config ;;
+            "Load Saved Settings")
                 if load_config; then
-                    dialog --colors --title "Configuration Loaded" --msgbox "\Z6Settings have been loaded from $CONFIG_FILE" 8 60
+                    gum_message "success" "Settings have been loaded from $CONFIG_FILE"
                 else
-                    dialog --colors --title "Error" --msgbox "\Z1No saved configuration found at $CONFIG_FILE" 8 60
+                    gum_message "error" "No saved configuration found at $CONFIG_FILE"
                 fi
                 ;;
-            9) check_for_updates ;;
-            10) show_about ;;
-            11) show_help ;;
-            0)
-                # Clean up and reset terminal without showing goodbye message
-                rm -f "$DIALOGRC" 2>/dev/null
+            "Check for Updates") check_for_updates ;;
+            "About echoDB") show_about ;;
+            "Help") show_help ;;
+            "Exit")
+                # Clean exit
                 clear
                 exit 0
                 ;;
             *)
-                # User pressed Cancel or ESC
-                if [ -z "$choice" ]; then
-                    dialog --colors --title "Exit Confirmation" --yesno "Are you sure you want to exit?" 8 60
-                    if [ $? -eq 0 ]; then
-                        # Clean up and reset terminal without showing goodbye message
-                        rm -f "$DIALOGRC" 2>/dev/null
-                        clear
-                        exit 0
-                    fi
+                # User pressed Ctrl+C or similar
+                if gum_confirm "Are you sure you want to exit?"; then
+                    clear
+                    exit 0
                 fi
                 ;;
         esac
     done
 }
-
 # View logs menu with enhanced theming
 view_logs() {
     local logs=()
